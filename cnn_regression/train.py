@@ -9,6 +9,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from utils.utils import trainloop
 
+
 if __name__ == "__main__":
     if not os.path.exists("./circles_radxy_train"):
         os.mkdir("./circles_radxy_train")

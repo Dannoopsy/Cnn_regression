@@ -5,6 +5,7 @@ import torch
 from PIL import Image
 from torchvision import transforms as T
 
+
 default_transform = T.ToTensor()
 
 

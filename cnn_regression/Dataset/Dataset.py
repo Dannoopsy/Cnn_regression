@@ -17,7 +17,7 @@ class AgeDataset(torch.utils.data.Dataset):
         img_path = os.path.join(self.root, file)
         image = Image.open(img_path).convert("RGB")
         image = self.transforms(image)
-        age = file[:file.find('_')]
+        age = float(file[:file.find('_')])
         return image, torch.tensor(age)
 
     def __len__(self):

@@ -1,13 +1,11 @@
 import os
 
-import pandas as pd
 import torch
 from PIL import Image
-from torchvision import transforms as T
 
 
 class AgeDataset(torch.utils.data.Dataset):
-    def __init__(self, root, transforms=T.ToTensor()):
+    def __init__(self, root, transforms):
         self.root = root
         self.transforms = transforms
         self.files = os.listdir(root)
@@ -17,7 +15,7 @@ class AgeDataset(torch.utils.data.Dataset):
         img_path = os.path.join(self.root, file)
         image = Image.open(img_path).convert("RGB")
         image = self.transforms(image)
-        age = float(file[:file.find('_')])
+        age = float(file[: file.find('_')])
         return image, torch.tensor(age)
 
     def __len__(self):

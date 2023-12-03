@@ -1,12 +1,14 @@
 import pandas as pd
 import torch
-import os
-import torch
-from cnn_regression.dataset.dataset import AgeDataset
 from torch import nn
 from torch.utils.data import DataLoader
-from cnn_regression.models.model import RegModel
+from torchvision import transforms as T
 from tqdm import tqdm
+
+from cnn_regression.dataset.dataset import AgeDataset
+from cnn_regression.models.model import RegModel
+
+
 def trainloop(model, optimizer, device, criterion, dataloader, valloader, epochs=10):
     for i in range(epochs):
         model.train()
@@ -55,28 +57,46 @@ def testloop(model, device, metrics, loader, dataset, path_to_res_file):
     return metric_values
 
 
-def train(data_path='./crop_part1/', epochs=1, out_model_path="./efnetb0.pkl", max_data=1000):
-    dataset = AgeDataset(data_path + 'train/')
-    indices = list(set(range(max_data)) & set(range(len(dataset)))) if max_data > 0 else list(range(len(dataset)))
-    dataloader = DataLoader(dataset, batch_size=16, shuffle=True, sampler=torch.utils.data.SubsetRandomSampler(indices, generator=None))
-    valdataset = AgeDataset(data_path + 'val/')
+def train(
+    data_path='./crop_part1/', epochs=1, out_model_path="./efnetb0.pkl", max_data=1000
+):
+    dataset = AgeDataset(data_path + 'train/', T.ToTensor())
+    indices = (
+        list(set(range(max_data)) & set(range(len(dataset))))
+        if max_data > 0
+        else list(range(len(dataset)))
+    )
+    dataloader = DataLoader(
+        dataset,
+        batch_size=16,
+        shuffle=True,
+        sampler=torch.utils.data.SubsetRandomSampler(indices, generator=None),
+    )
+    valdataset = AgeDataset(data_path + 'val/', T.ToTensor())
     valloader = DataLoader(valdataset, batch_size=16, shuffle=True)
     model = RegModel()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters())
-    mse = nn.MSELoss(reduction="mean")
+    #     mse = nn.MSELoss(reduction="mean")
     l1 = nn.L1Loss(reduction="mean")
-    model = trainloop(model, optimizer, device, mse, dataloader, valloader, epochs)
+    model = trainloop(model, optimizer, device, l1, dataloader, valloader, epochs)
     torch.save(model.state_dict(), out_model_path)
-    
-def infer(path_to_data='./crop_part1/val/', path_to_model="./efnetb0.pkl", path_to_res_file="./res.csv"):
+
+
+def infer(
+    path_to_data='./crop_part1/val/',
+    path_to_model="./efnetb0.pkl",
+    path_to_res_file="./res.csv",
+):
     model = RegModel()
     model.load_state_dict(torch.load(path_to_model))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
-    valdataset = AgeDataset(path_to_data)
+    valdataset = AgeDataset(path_to_data, T.ToTensor())
     valloader = DataLoader(valdataset, batch_size=16, shuffle=False)
     metrics = {"l1": nn.L1Loss(reduction="mean"), "mse": nn.MSELoss(reduction="mean")}
-    metric_values = testloop(model, device, metrics, valloader, valdataset, path_to_res_file)
+    metric_values = testloop(
+        model, device, metrics, valloader, valdataset, path_to_res_file
+    )
     print(metric_values)

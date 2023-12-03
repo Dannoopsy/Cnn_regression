@@ -1,4 +1,4 @@
-from utils.utils import infer
+from cnn_regression.utils.utils import infer
 import fire
 
 

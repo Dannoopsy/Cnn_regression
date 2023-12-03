@@ -2,10 +2,10 @@ import pandas as pd
 import torch
 import os
 import torch
-from Dataset.Dataset import AgeDataset
+from cnn_regression.dataset.dataset import AgeDataset
 from torch import nn
 from torch.utils.data import DataLoader
-from models.model import RegModel
+from cnn_regression.models.model import RegModel
 from tqdm import tqdm
 def trainloop(model, optimizer, device, criterion, dataloader, valloader, epochs=10):
     for i in range(epochs):

@@ -1,0 +1,6 @@
+outs:
+- md5: 6d031280dd4f8a80a8ced44cd0c2d69c.dir
+  size: 50840966
+  nfiles: 9780
+  hash: md5
+  path: crop_part1

@@ -2,8 +2,9 @@ import pandas as pd
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 from torchvision import transforms as T
+from tqdm import tqdm
+
 from cnn_regression.dataset.dataset import AgeDataset
 from cnn_regression.models.model import RegModel
 
@@ -77,7 +78,7 @@ def train(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters())
-#     mse = nn.MSELoss(reduction="mean")
+    #     mse = nn.MSELoss(reduction="mean")
     l1 = nn.L1Loss(reduction="mean")
     model = trainloop(model, optimizer, device, l1, dataloader, valloader, epochs)
     torch.save(model.state_dict(), out_model_path)

@@ -57,10 +57,17 @@ def testloop(model, device, metrics, loader, dataset, path_to_res_file):
     return metric_values
 
 
-def train(
-    data_path='./crop_part1/', epochs=1, out_model_path="./efnetb0.pkl", max_data=1000
-):
-    dataset = AgeDataset(data_path + 'train/', T.ToTensor())
+def train(cfg):
+    train_path = cfg['data']['train_path']
+    val_path = cfg['data']['val_path']
+    epochs = cfg['training']['epochs']
+    out_model_path = cfg['data']['out_model_path']
+    batch_size = cfg['training']['batch_size']
+    max_data = cfg['training']['max_data']
+    optimizer = cfg['training']['optimizer']
+    lr = cfg['training']['learning_rate']
+    loss = cfg['training']['loss']
+    dataset = AgeDataset(train_path, T.ToTensor())
     indices = (
         list(set(range(max_data)) & set(range(len(dataset))))
         if max_data > 0
@@ -68,19 +75,28 @@ def train(
     )
     dataloader = DataLoader(
         dataset,
-        batch_size=16,
+        batch_size=batch_size,
         shuffle=False,
         sampler=torch.utils.data.SubsetRandomSampler(indices, generator=None),
     )
-    valdataset = AgeDataset(data_path + 'val/', T.ToTensor())
-    valloader = DataLoader(valdataset, batch_size=16, shuffle=True)
+    valdataset = AgeDataset(val_path, T.ToTensor())
+    valloader = DataLoader(valdataset, batch_size=batch_size, shuffle=True)
     model = RegModel()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
-    optimizer = torch.optim.Adam(model.parameters())
-    #     mse = nn.MSELoss(reduction="mean")
-    l1 = nn.L1Loss(reduction="mean")
-    model = trainloop(model, optimizer, device, l1, dataloader, valloader, epochs)
+    if optimizer == 'adam':
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    elif optimizer == 'adamw':
+        optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    else:
+        print('не знаю такого, использую SGD')
+        optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+
+    if loss == 'mse':
+        loss = nn.MSELoss(reduction="mean")
+    else:
+        loss = nn.L1Loss(reduction="mean")
+    model = trainloop(model, optimizer, device, loss, dataloader, valloader, epochs)
     torch.save(model.state_dict(), out_model_path)
 
 

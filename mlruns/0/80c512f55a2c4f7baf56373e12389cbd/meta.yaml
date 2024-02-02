@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/0/80c512f55a2c4f7baf56373e12389cbd/artifacts
+end_time: 1706866645585
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 80c512f55a2c4f7baf56373e12389cbd
+run_name: adaptable-steed-102
+run_uuid: 80c512f55a2c4f7baf56373e12389cbd
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706866608263
+status: 3
+tags: []
+user_id: root

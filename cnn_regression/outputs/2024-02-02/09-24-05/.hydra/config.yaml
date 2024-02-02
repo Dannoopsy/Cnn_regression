@@ -1,0 +1,13 @@
+data:
+  train_path: ../crop_part1/train/
+  val_path: ../crop_part1/val/
+  out_model_path: ./efnetb0.pkl
+training:
+  loss: l1
+  batch_size: 32
+  epochs: 10
+  learning_rate: 0.001
+  max_data: 1000
+  optimizer: adam
+logging:
+  mlflow_url: http://127.0.0.1:8080

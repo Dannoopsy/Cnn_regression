@@ -4,31 +4,40 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import transforms as T
 from tqdm import tqdm
+import mlflow
 
 from cnn_regression.dataset.dataset import AgeDataset
 from cnn_regression.models.model import RegModel
 
 
-def trainloop(model, optimizer, device, criterion, dataloader, valloader, epochs=10):
+def trainloop(model, optimizer, device, criterion, metrics, dataloader, valloader, epochs=10):
     for i in range(epochs):
         model.train()
         lt = 0
-        for x, y in tqdm(dataloader):
+        for step, (x, y) in tqdm(enumerate(dataloader)):
             out = model(x.to(device))
             loss = criterion(y.to(device).float().view(out.shape), out)
             optimizer.zero_grad()
             loss.backward()
+            mlflow.log_metric("loss", loss.item(), step=step * (i + 1))
             optimizer.step()
             lt += loss.item()
+            for metric, fun in metrics.items():
+                metric_value = fun(y.to(device).float().view(out.shape), out).item()
+                mlflow.log_metric(metric, metric_value, step=step * (i + 1))
 
         lv = 0
         model.eval()
 
         with torch.no_grad():
-            for x, y in tqdm(valloader):
+            for step, (x, y) in tqdm(enumerate(valloader)):
                 out = model(x.to(device))
                 loss = criterion(y.to(device).float().view(out.shape), out)
+                mlflow.log_metric("loss", loss.item(), step=i * len(dataloader))
                 lv += loss.item()
+                for metric, fun in metrics.items():
+                    metric_value = fun(y.to(device).float().view(out.shape), out).item()
+                    mlflow.log_metric('val_' + metric, metric_value, step=i * len(dataloader))
 
         print(
             f"epoch = {i}, train loss = {lt / len(dataloader)}, val loss = {lv / len(valloader)}"
@@ -67,6 +76,9 @@ def train(cfg):
     optimizer = cfg['training']['optimizer']
     lr = cfg['training']['learning_rate']
     loss = cfg['training']['loss']
+    mlflow_url = cfg['logging']['mlflow_url']
+    mlflow.set_tracking_uri(uri=mlflow_url)
+    
     dataset = AgeDataset(train_path, T.ToTensor())
     indices = (
         list(set(range(max_data)) & set(range(len(dataset))))
@@ -80,7 +92,7 @@ def train(cfg):
         sampler=torch.utils.data.SubsetRandomSampler(indices, generator=None),
     )
     valdataset = AgeDataset(val_path, T.ToTensor())
-    valloader = DataLoader(valdataset, batch_size=batch_size, shuffle=True)
+    valloader = DataLoader(valdataset, batch_size=batch_size, shuffle=False)
     model = RegModel()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
@@ -96,7 +108,11 @@ def train(cfg):
         loss = nn.MSELoss(reduction="mean")
     else:
         loss = nn.L1Loss(reduction="mean")
-    model = trainloop(model, optimizer, device, loss, dataloader, valloader, epochs)
+        
+    metrics = {"l1": nn.L1Loss(reduction="mean"), "mse": nn.MSELoss(reduction="mean")}
+    with mlflow.start_run():
+        mlflow.log_params(cfg.training)
+        model = trainloop(model, optimizer, device, loss, metrics, dataloader, valloader, epochs)
     torch.save(model.state_dict(), out_model_path)
 
 

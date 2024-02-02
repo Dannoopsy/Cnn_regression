@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/0/417b49e70eef4ba19e1c1afb8a3b9201/artifacts
+end_time: 1706865779925
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 417b49e70eef4ba19e1c1afb8a3b9201
+run_name: peaceful-ox-523
+run_uuid: 417b49e70eef4ba19e1c1afb8a3b9201
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1706865776076
+status: 4
+tags: []
+user_id: root

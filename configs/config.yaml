@@ -3,9 +3,11 @@ data:
     val_path: ../crop_part1/val/
     out_model_path: ./efnetb0.pkl
 training:
-    loss: l1
+    loss: mse
     batch_size: 32
-    epochs: 1
+    epochs: 20
     learning_rate: 1e-3
-    max_data: 1000
+    max_data: 0
     optimizer: adam
+logging:
+    mlflow_url: "http://localhost:8886"
